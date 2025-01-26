@@ -1,0 +1,52 @@
+{
+  "name": "Lurkers",
+  "version": "0.1.0",
+  "private": true,
+  "author": {
+    "name": "Mohit Yadav",
+    "email": "mohit@mohitya.dev",
+    "url": "https://mohitya.dev"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.250",
+    "@remotion/cli": "4.0.250",
+    "@remotion/google-fonts": "4.0.250",
+    "@remotion/lambda": "4.0.250",
+    "@remotion/paths": "4.0.250",
+    "@remotion/player": "4.0.250",
+    "@remotion/shapes": "4.0.250",
+    "@remotion/tailwind": "4.0.250",
+    "clsx": "2.1.1",
+    "next": "15.1.2",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "remotion": "4.0.250",
+    "tailwind-merge": "2.5.2",
+    "zod": "3.22.3"
+  },
+  "devDependencies": {
+    "@remotion/eslint-config": "4.0.250",
+    "@remotion/eslint-plugin": "4.0.250",
+    "@types/node": "20.12.14",
+    "@types/react": "19.0.0",
+    "@types/react-dom": "19.0.0",
+    "@types/web": "0.0.166",
+    "autoprefixer": "10.4.20",
+    "dotenv": "16.0.3",
+    "eslint": "8.57.1",
+    "eslint-config-next": "15.0.4",
+    "postcss": "8.4.47",
+    "prettier": "3.3.3",
+    "tailwindcss": "3.4.13",
+    "typescript": "5.5.4"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "remotion": "remotion studio",
+    "render": "remotion render",
+    "deploy": "node deploy.mjs"
+  }
+}
