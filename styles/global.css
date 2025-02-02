@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: #fff;
+    --background: transparent;
     --foreground: #000;
     --unfocused-border-color: #eaeaea;
     --focused-border-color: #666;
@@ -25,7 +25,7 @@
 
   @media (prefers-color-scheme: dark) {
     :root {
-      --background: #000000;
+      --background: transparent;
       --unfocused-border-color: #333;
       --focused-border-color: #888;
       --foreground: #fff;
@@ -33,5 +33,9 @@
       --geist-error: red;
       --subtitle: #8d8d8d;
     }
+  }
+
+  body {
+    overflow: hidden;
   }
 }
