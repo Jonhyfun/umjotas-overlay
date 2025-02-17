@@ -1,9 +1,7 @@
 import { Composition } from "remotion";
-import { Main } from "./Door";
+import { defaultDoorProps, Door, DoorProps } from "./Door";
 import {
   COMP_NAME,
-  CompositionProps,
-  defaultMyCompProps,
   DURATION_IN_FRAMES,
   VIDEO_FPS,
   VIDEO_HEIGHT,
@@ -14,14 +12,14 @@ export const RemotionRoot: React.FC = () => {
   return (
     <>
       <Composition
-        schema={CompositionProps}
+        schema={DoorProps}
         id={COMP_NAME}
-        component={Main}
+        component={Door}
         durationInFrames={DURATION_IN_FRAMES}
         fps={VIDEO_FPS}
         width={VIDEO_WIDTH}
         height={VIDEO_HEIGHT}
-        defaultProps={defaultMyCompProps}
+        defaultProps={defaultDoorProps}
       />
     </>
   );

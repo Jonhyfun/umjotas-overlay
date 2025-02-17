@@ -1,11 +1,11 @@
 {
-  "name": "Lurkers",
-  "version": "0.1.0",
+  "name": "umjotasoverlay",
+  "version": "1.0.0",
   "private": true,
   "author": {
-    "name": "Mohit Yadav",
-    "email": "mohit@mohitya.dev",
-    "url": "https://mohitya.dev"
+    "name": "João Paulo Abadio Grimaldi",
+    "email": "jp.grimaldi@hotmail.com",
+    "url": "https://twitch.tv/umjotas"
   },
   "dependencies": {
     "@remotion/bundler": "4.0.250",

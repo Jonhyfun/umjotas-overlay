@@ -21,6 +21,12 @@ export default {
 
         "geist-error": "var(--geist-error)",
 
+        primary: "#0aebbf",
+        "primary-dark": "#2dac92",
+
+        secondary: "#bf0aeb",
+        "secondary-dark": "#922dac",
+
         subtitle: "var(--subtitle)",
       },
       padding: {
