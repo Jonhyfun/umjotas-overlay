@@ -50,6 +50,8 @@ export default {
 
       animation: {
         spinner: "spinner 1.2s linear infinite",
+        "animated-background": "animatedBackground 60s linear infinite",
+        "wing-image": "wingimage 1.5s steps(1, end) infinite",
       },
 
       keyframes: {
@@ -59,6 +61,25 @@ export default {
           },
           "100%": {
             opacity: "0.15",
+          },
+        },
+        wingimage: {
+          "0%": {
+            background: 'center / contain no-repeat url("/wing_1.png")',
+          },
+          "50%": {
+            background: 'center / contain no-repeat url("/wing_2.png")',
+          },
+          "100%": {
+            background: 'center / contain no-repeat url("/wing_1.png")',
+          },
+        },
+        animatedBackground: {
+          from: {
+            backgroundPosition: "0px 0px",
+          },
+          to: {
+            backgroundPosition: "1280px 0px",
           },
         },
       },
