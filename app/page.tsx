@@ -1,5 +1,6 @@
 "use client";
 
+import useWebSocket from "react-use-websocket";
 import { Player } from "@remotion/player";
 import type { NextPage } from "next";
 import React, {
@@ -15,7 +16,6 @@ import { VIDEO_FPS } from "../types/constants";
 import { z } from "zod";
 import { useStateUpdateBatcher } from "./hooks/stateUpdateBatcher";
 import { randomFromInterval } from "./utils/math";
-import useWebSocket from "react-use-websocket";
 import { Timer, TimerProps } from "../remotion/Timer";
 import { useSearchParams } from "next/navigation";
 import { Invasion } from "../remotion/Invasion";
@@ -38,6 +38,7 @@ const topOptions = Array.from({ length: topBounds[1] - topBounds[0] })
   .filter(function (_, i) {
     return i % 70 === 0;
   });
+
 const leftOptions = Array.from({ length: leftBounds[1] - leftBounds[0] })
   .map((_, i) => i + leftBounds[0])
   .filter(function (_, i) {
@@ -107,7 +108,6 @@ const Home: NextPage = () => {
     "tchans",
   );
 
-  const [burst, setBurst] = useState(true);
   const [doorAlerts, setDoorAlerts] = useState<DoorAlerts>({});
   const [timers, setTimers] = useState<
     (z.infer<typeof TimerProps> & { label: string })[]
@@ -115,7 +115,6 @@ const Home: NextPage = () => {
 
   const { batchAction: batchTimerAction } = useStateUpdateBatcher(timers);
   const { batchAction } = useStateUpdateBatcher(doorAlerts);
-  const { batchAction: batchBurstAction } = useStateUpdateBatcher(burst);
 
   const { lastMessage } = useWebSocket<IncomingSocketEvent>(
     "ws://localhost:5000/channel/umjotas/overlay",
@@ -183,16 +182,23 @@ const Home: NextPage = () => {
       if (jsonEvent.event_name === "jumpTimer") {
         addTimer((jsonEvent as any).label, (jsonEvent as any).seconds);
       }
+      if (jsonEvent.event_name === "tchans") {
+        //TODO um objeto fora?, organizar melhor enfim
+        addTchansComposition({ durationInFrames: 60 });
+      }
+      if (jsonEvent.event_name === "invasion") {
+        addAlienComposition({ durationInFrames: 30 * 10 + 14 });
+        addBurstComposition({ durationInFrames: 30 * 10 + 14 });
+      }
     });
-  }, [addAlert, addTimer, lastMessage]);
-
-  useEffect(() => {
-    addAlienComposition({ durationInFrames: 30 * 10 + 14 });
-  }, [addAlienComposition]);
-
-  useEffect(() => {
-    addTchansComposition({ durationInFrames: 60 });
-  }, [addTchansComposition]);
+  }, [
+    addAlert,
+    addAlienComposition,
+    addBurstComposition,
+    addTchansComposition,
+    addTimer,
+    lastMessage,
+  ]);
 
   return (
     <div className="overflow-hidden shadow-[0_0_200px_rgba(0,0,0,0.15)] flex h-[1080px] w-[1920px] border-solid border-2 border-black relative">
@@ -306,37 +312,7 @@ const Home: NextPage = () => {
         ),
       )}
       {AlienCompositions}
-      {burst &&
-        Array.from({ length: 360 })
-          .map((_, i) => i)
-          .filter((i) => i % 14 === 0)
-          .map((i) => (
-            <Player
-              key={i}
-              className="absolute"
-              style={{
-                width: "100%",
-                height: "100%",
-                position: "absolute",
-                top: 0,
-                left: 0,
-                bottom: 0,
-                right: 0,
-              }}
-              inputProps={{
-                degrees: i + 1,
-                seed: i.toLocaleString(),
-                onFinished: () => batchBurstAction(() => setBurst(false)),
-              }}
-              compositionHeight={1080}
-              compositionWidth={1920}
-              component={AnimeBurst}
-              durationInFrames={30 * 10 + 14}
-              fps={VIDEO_FPS}
-              autoPlay
-              loop
-            />
-          ))}
+      {BurstCompositions}
       {TchansCompositions}
     </div>
   );

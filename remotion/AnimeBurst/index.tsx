@@ -13,12 +13,10 @@ function randomIntFromInterval(min: number, max: number, seed: string) {
   return Math.floor(random(seed) * (max - min + 1) + min);
 }
 
-export const AnimeBurst: SelfDestructComposition<{
+const AnimeSpike: React.FC<{
   degrees: number;
   seed: string;
-}> = ({ degrees, seed, onFinished }) => {
-  void useCompositionFinished(onFinished);
-
+}> = ({ degrees, seed }) => {
   const spikeOffset = useMemo(() => randomIntFromInterval(0, 5, seed), [seed]);
   const speed = useMemo(() => randomIntFromInterval(45, 100, seed), [seed]);
   const currentFrame = useCurrentFrame();
@@ -68,5 +66,24 @@ export const AnimeBurst: SelfDestructComposition<{
         ></div>
       </div>
     </div>
+  );
+};
+
+export const AnimeBurst: SelfDestructComposition = ({ onFinished }) => {
+  void useCompositionFinished(onFinished);
+
+  return (
+    <>
+      {Array.from({ length: 360 })
+        .map((_, i) => i)
+        .filter((i) => i % 14 === 0)
+        .map((i) => {
+          const degrees = i + 1;
+          const seed = i.toLocaleString();
+          return (
+            <AnimeSpike key={`burst-${i}`} degrees={degrees} seed={seed} />
+          );
+        })}
+    </>
   );
 };
