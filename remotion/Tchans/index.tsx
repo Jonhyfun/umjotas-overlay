@@ -1,14 +1,16 @@
-import { useEffect, useRef } from "react";
 import {
   Audio,
   Easing,
   interpolate,
   staticFile,
   useCurrentFrame,
-  useVideoConfig,
 } from "remotion";
+import type { SelfDestructComposition } from "../types";
+import { useCompositionFinished } from "../../app/hooks/compositionFinished";
 
-export function Tchans({ onFinished }: { onFinished?: VoidFunction }) {
+export const Tchans: SelfDestructComposition = ({ onFinished }) => {
+  void useCompositionFinished(onFinished);
+
   const currentFrame = useCurrentFrame();
   const spread = interpolate(currentFrame, [0, 30, 60], [0, 100, 0], {
     easing: Easing.out(Easing.cubic),
@@ -19,21 +21,6 @@ export function Tchans({ onFinished }: { onFinished?: VoidFunction }) {
     extrapolateRight: "clamp",
   });
 
-  const finished = useRef(false);
-
-  const { durationInFrames } = useVideoConfig();
-
-  useEffect(() => {
-    if (!finished.current) {
-      if (currentFrame === durationInFrames - 1) {
-        if (onFinished) {
-          finished.current = true;
-          onFinished();
-        }
-      }
-    }
-  }, [durationInFrames, currentFrame, onFinished]);
-
   return (
     <>
       <div
@@ -43,4 +30,4 @@ export function Tchans({ onFinished }: { onFinished?: VoidFunction }) {
       <Audio src={staticFile("/leaguematchspook.wav")} volume={0.8} />
     </>
   );
-}
+};

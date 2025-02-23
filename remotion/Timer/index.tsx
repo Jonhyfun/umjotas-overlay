@@ -1,19 +1,22 @@
 import { loadFont } from "@remotion/google-fonts/Inter";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
 import { z } from "zod";
+import type { SelfDestructComposition } from "../types";
+import { useCompositionFinished } from "../../app/hooks/compositionFinished";
+
 loadFont();
 
 export const TimerProps = z.object({
   seconds: z.number(),
 });
 
-export const Timer = ({
+export const Timer: SelfDestructComposition<z.infer<typeof TimerProps>> = ({
   seconds,
   onFinished,
-}: z.infer<typeof TimerProps> & { onFinished?: VoidFunction }) => {
-  const finished = useRef(false);
+}) => {
+  void useCompositionFinished(onFinished);
   const { fps, durationInFrames } = useVideoConfig();
   const frame = useCurrentFrame();
   const strokeProgress = interpolate(
@@ -22,18 +25,6 @@ export const Timer = ({
     [0, 1260],
     { extrapolateRight: "clamp" },
   );
-
-  //TODO dry, hook this logic somehow? interface at least
-  useEffect(() => {
-    if (!finished.current) {
-      if (frame === durationInFrames - 1) {
-        if (onFinished) {
-          finished.current = true;
-          onFinished();
-        }
-      }
-    }
-  }, [durationInFrames, frame, onFinished]);
 
   return (
     <div className="w-full h-full border-black border-[6px] bg-slate-600 rounded-full relative">

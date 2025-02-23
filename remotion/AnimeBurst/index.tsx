@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
+import type { SelfDestructComposition } from "../types";
 import {
   Easing,
   interpolate,
@@ -6,20 +7,18 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import { useCompositionFinished } from "../../app/hooks/compositionFinished";
 
 function randomIntFromInterval(min: number, max: number, seed: string) {
   return Math.floor(random(seed) * (max - min + 1) + min);
 }
 
-export function AnimeBurst({
-  degrees,
-  seed,
-  onFinished,
-}: {
+export const AnimeBurst: SelfDestructComposition<{
   degrees: number;
   seed: string;
-  onFinished?: VoidFunction;
-}) {
+}> = ({ degrees, seed, onFinished }) => {
+  void useCompositionFinished(onFinished);
+
   const spikeOffset = useMemo(() => randomIntFromInterval(0, 5, seed), [seed]);
   const speed = useMemo(() => randomIntFromInterval(45, 100, seed), [seed]);
   const currentFrame = useCurrentFrame();
@@ -30,7 +29,7 @@ export function AnimeBurst({
       Array.from({ length: durationInFrames })
         .map((_, i) => spikeOffset + (i + 1))
         .filter((_, i) => i % 2 == 0),
-    [],
+    [durationInFrames, spikeOffset],
   );
 
   const heightOutput = useMemo(() => {
@@ -49,19 +48,6 @@ export function AnimeBurst({
     easing: Easing.linear,
     extrapolateRight: "clamp",
   });
-
-  const finished = useRef(false);
-
-  useEffect(() => {
-    if (!finished.current) {
-      if (currentFrame === durationInFrames - 1) {
-        if (onFinished) {
-          finished.current = true;
-          onFinished();
-        }
-      }
-    }
-  }, [durationInFrames, currentFrame, onFinished]);
 
   return (
     <div className="fixed w-full h-full">
@@ -83,4 +69,4 @@ export function AnimeBurst({
       </div>
     </div>
   );
-}
+};

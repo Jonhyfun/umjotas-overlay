@@ -6,7 +6,7 @@ import { useStateUpdateBatcher } from "../hooks/stateUpdateBatcher";
 import useWebSocket from "react-use-websocket";
 import { Door, DoorProps } from "../../remotion/Door";
 import { randomFromInterval } from "../utils/math";
-import { DURATION_IN_FRAMES, VIDEO_FPS } from "../../types/constants";
+import { VIDEO_FPS } from "../../types/constants";
 import { z } from "zod";
 
 type DoorAlerts = {
@@ -119,7 +119,7 @@ export default function DoorOnly() {
                 });
               },
             }}
-            durationInFrames={DURATION_IN_FRAMES}
+            durationInFrames={100}
             fps={VIDEO_FPS}
             compositionHeight={1080}
             compositionWidth={1920}

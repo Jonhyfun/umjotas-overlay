@@ -12,8 +12,10 @@ import {
 } from "remotion";
 import { loadFont } from "@remotion/google-fonts/Inter";
 
-import React, { useEffect, useRef } from "react";
+import React from "react";
 import { Steve } from "../Assets/Steve";
+import { SelfDestructComposition } from "../types";
+import { useCompositionFinished } from "../../app/hooks/compositionFinished";
 loadFont();
 
 export const DoorProps = z.object({
@@ -27,12 +29,13 @@ export const defaultDoorProps: z.infer<typeof DoorProps> = {
     "https://static-cdn.jtvnw.net/jtv_user_pictures/f10831ff-a866-4ca0-982f-1b66d2f09175-profile_banner-480.png",
 };
 
-export const Door = ({
+export const Door: SelfDestructComposition<z.infer<typeof DoorProps>> = ({
   faceSrc,
   username,
   onFinished,
-}: z.infer<typeof DoorProps> & { onFinished?: VoidFunction }) => {
-  const finished = useRef(false);
+}) => {
+  void useCompositionFinished(onFinished);
+
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
   const fontScale = interpolate(frame, [58, 90], [0, 128], {
@@ -51,17 +54,6 @@ export const Door = ({
     staticFile("/porta.png"),
     staticFile("/porta_aberta.png"),
   ];
-
-  useEffect(() => {
-    if (!finished.current) {
-      if (frame === durationInFrames - 1) {
-        if (onFinished) {
-          finished.current = true;
-          onFinished();
-        }
-      }
-    }
-  }, [durationInFrames, frame, onFinished]);
 
   return (
     <AbsoluteFill className="bg-transparent relative">

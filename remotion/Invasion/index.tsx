@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import {
-  AbsoluteFill,
   Audio,
   Easing,
   Img,
@@ -10,6 +9,8 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
+import type { SelfDestructComposition } from "../types";
+import { useCompositionFinished } from "../../app/hooks/compositionFinished";
 
 function randomIntFromInterval(min: number, max: number, seed: string) {
   return Math.floor(random(seed) * (max - min + 1) + min);
@@ -72,33 +73,18 @@ function Alien({ seed }: { seed: string }) {
   );
 }
 
-export function Invasion({ onFinished }: { onFinished?: VoidFunction }) {
-  //TODO SHARED TYPES for this onFinished, maybe a hook that injects it?
-  const finished = useRef(false);
-
-  const currentFrame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
-
-  useEffect(() => {
-    if (!finished.current) {
-      if (currentFrame === durationInFrames - 1) {
-        if (onFinished) {
-          finished.current = true;
-          onFinished();
-        }
-      }
-    }
-  }, [durationInFrames, currentFrame, onFinished]);
+export const Invasion: SelfDestructComposition = ({ onFinished }) => {
+  void useCompositionFinished(onFinished);
 
   return (
     <div className="bg-[#0b5222A5] w-full h-full">
       {Array.from({ length: 8 }).map((_, i) => (
         <Alien
           key={`alien-${i}`}
-          seed={`${i % 2 === 0 ? "al13n-" : "esrever-n31la-"}${i * Math.random() * 10}`}
+          seed={`${i % 2 === 0 ? "al13n-" : "esrever-n31la-"}${i * random(null) * 10}`}
         />
       ))}
       <Audio src={staticFile("/invasao.wav")} loop volume={0.8} />
     </div>
   );
-}
+};
