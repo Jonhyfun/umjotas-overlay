@@ -4,9 +4,21 @@ import { Player } from "@remotion/player";
 import { useStateUpdateBatcher } from "./stateUpdateBatcher";
 import { VIDEO_FPS } from "../../types/constants";
 
+function makeid(length: number) {
+  let result = "";
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  let counter = 0;
+  while (counter < length) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    counter += 1;
+  }
+  return result;
+}
+
 export function useEphemeralComposition<T>(
   Composition: SelfDestructComposition<T>,
-  key: string,
 ): [
   JSX.Element,
   (
@@ -19,18 +31,24 @@ export function useEphemeralComposition<T>(
     durationInFrames: number;
   };
 
-  const [compositionInstances, setCompositionInstances] = useState<
-    CompositionInstanceProps[]
-  >([] as any);
+  const [compositionInstances, setCompositionInstances] = useState<{
+    [key in string]: CompositionInstanceProps;
+  }>({});
 
-  const { batchAction } = useStateUpdateBatcher(compositionInstances);
+  const { batchAction } = useStateUpdateBatcher(compositionInstances); //TODO allow distinct batchers to run in the same queue
+
+  const currentComposition = useMemo(
+    () => Object.entries(compositionInstances)[0],
+    [compositionInstances],
+  );
 
   const addComposition = useCallback(
     (props: CompositionInstanceProps) => {
       batchAction(() => {
         setCompositionInstances((current) => {
-          const newCurrent = [...current];
-          newCurrent.push(props);
+          const newCurrent = { ...current };
+          console.log({ props });
+          newCurrent[makeid(5)] = props;
           return newCurrent;
         });
       });
@@ -41,9 +59,9 @@ export function useEphemeralComposition<T>(
   const Compositions = useMemo(
     () => (
       <>
-        {compositionInstances.map((props, i) => (
+        {currentComposition && (
           <Player
-            key={`${key}-composition-${i}`}
+            key={currentComposition[0]}
             className="absolute"
             style={{
               width: "100vw",
@@ -58,28 +76,28 @@ export function useEphemeralComposition<T>(
             compositionWidth={1920}
             inputProps={
               {
-                ...props,
+                ...currentComposition[1],
                 onFinished: () => {
                   batchAction(() =>
                     setCompositionInstances((current) => {
-                      const newCurrent = [...current];
-                      newCurrent.shift();
-                      return newCurrent as CompositionInstanceProps[];
+                      const newCurrent = { ...current };
+                      delete newCurrent[currentComposition[0]];
+                      return newCurrent;
                     }),
                   );
                 },
               } as any //TODO pq?
             }
             component={Composition}
-            durationInFrames={props.durationInFrames}
+            durationInFrames={currentComposition[1].durationInFrames}
             fps={VIDEO_FPS}
             moveToBeginningWhenEnded={false}
             autoPlay
           />
-        ))}
+        )}
       </>
     ),
-    [Composition, batchAction, compositionInstances, key],
+    [Composition, batchAction, currentComposition],
   );
 
   return [Compositions, addComposition];

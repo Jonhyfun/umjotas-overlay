@@ -15,9 +15,13 @@ export function useCompositionFinished(
       if (currentFrame === durationInFrames - 1) {
         if (onFinished) {
           finished.current = true;
+          console.log("finished");
           onFinished();
         }
       }
     }
+    return () => {
+      finished.current = false;
+    };
   }, [durationInFrames, currentFrame, onFinished]);
 }

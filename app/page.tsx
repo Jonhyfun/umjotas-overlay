@@ -18,10 +18,10 @@ import { useStateUpdateBatcher } from "./hooks/stateUpdateBatcher";
 import { randomFromInterval } from "./utils/math";
 import { Timer, TimerProps } from "../remotion/Timer";
 import { useSearchParams } from "next/navigation";
-import { Invasion } from "../remotion/Invasion";
-import { AnimeBurst } from "../remotion/AnimeBurst";
 import { Tchans } from "../remotion/Tchans";
 import { useEphemeralComposition } from "./hooks/ephemeralComposition";
+import { Invasion } from "../remotion/Invasion";
+import { AnimeBurst } from "../remotion/AnimeBurst";
 
 type DoorAlerts = {
   [key in string]: {
@@ -93,20 +93,14 @@ const Home: NextPage = () => {
   const wings = searchParams.get("wings");
   const isAspectVideo = searchParams.get("video");
 
-  const [AlienCompositions, addAlienComposition] = useEphemeralComposition(
-    Invasion,
-    "aliens",
-  );
+  const [AlienCompositions, addAlienComposition] =
+    useEphemeralComposition(Invasion);
 
-  const [BurstCompositions, addBurstComposition] = useEphemeralComposition(
-    AnimeBurst,
-    "burst",
-  );
+  const [BurstCompositions, addBurstComposition] =
+    useEphemeralComposition(AnimeBurst);
 
-  const [TchansCompositions, addTchansComposition] = useEphemeralComposition(
-    Tchans,
-    "tchans",
-  );
+  const [TchansCompositions, addTchansComposition] =
+    useEphemeralComposition(Tchans);
 
   const [doorAlerts, setDoorAlerts] = useState<DoorAlerts>({});
   const [timers, setTimers] = useState<
@@ -116,7 +110,7 @@ const Home: NextPage = () => {
   const { batchAction: batchTimerAction } = useStateUpdateBatcher(timers);
   const { batchAction } = useStateUpdateBatcher(doorAlerts);
 
-  const { lastMessage } = useWebSocket<IncomingSocketEvent>(
+  const { lastMessage, sendMessage } = useWebSocket<IncomingSocketEvent>(
     "ws://localhost:5000/channel/umjotas/overlay",
     { reconnectAttempts: 10 },
   );
@@ -168,14 +162,11 @@ const Home: NextPage = () => {
   );
 
   useEffect(() => {
-    console.log({ lastMessage });
     if (!lastMessage) return;
     (lastMessage.data as Blob).text().then((jsonString) => {
-      console.log({ jsonString });
       const jsonEvent = JSON.parse(
         jsonString,
       ) as unknown as IncomingSocketEvent;
-      console.log({ jsonEvent });
       if (jsonEvent.event_name === "porta") {
         addAlert(jsonEvent.username, jsonEvent.profile_pic);
       }
@@ -187,7 +178,10 @@ const Home: NextPage = () => {
         addTchansComposition({ durationInFrames: 60 });
       }
       if (jsonEvent.event_name === "invasion") {
-        addAlienComposition({ durationInFrames: 30 * 10 + 14 });
+        addAlienComposition({
+          durationInFrames: 30 * 10 + 14,
+          blast: () => sendMessage("alienblast"),
+        });
         addBurstComposition({ durationInFrames: 30 * 10 + 14 });
       }
     });
@@ -198,6 +192,7 @@ const Home: NextPage = () => {
     addTchansComposition,
     addTimer,
     lastMessage,
+    sendMessage,
   ]);
 
   return (
