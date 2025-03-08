@@ -9,6 +9,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { Door, DoorProps } from "../remotion/Door";
@@ -22,6 +23,12 @@ import { Tchans } from "../remotion/Tchans";
 import { useEphemeralComposition } from "./hooks/ephemeralComposition";
 import { Invasion } from "../remotion/Invasion";
 import { AnimeBurst } from "../remotion/AnimeBurst";
+import { BoarBoom } from "../remotion/BoarBoom";
+import { useCompositionSpawner } from "./hooks/compositionSpawner";
+import { Banana } from "../remotion/Banana";
+import { Rene } from "../remotion/Rene";
+import { DeepFriedScreenshot } from "../remotion/DeepFriedScreenshot";
+import { prefetch } from "remotion";
 
 type DoorAlerts = {
   [key in string]: {
@@ -93,6 +100,9 @@ const Home: NextPage = () => {
   const wings = searchParams.get("wings");
   const isAspectVideo = searchParams.get("video");
 
+  const [reneHP, setReneHP] = useState(50);
+  const [damageRene, setDamageRene] = useState(false);
+
   const [AlienCompositions, addAlienComposition] =
     useEphemeralComposition(Invasion);
 
@@ -101,6 +111,15 @@ const Home: NextPage = () => {
 
   const [TchansCompositions, addTchansComposition] =
     useEphemeralComposition(Tchans);
+
+  const [BoarBoomCompositions, addBoarBoomComposition] =
+    useCompositionSpawner(BoarBoom);
+
+  const [BananaCompositions, addBananaCompositions] =
+    useCompositionSpawner(Banana);
+
+  const [DeepFriedCompositions, addDeepFriedCompositions] =
+    useCompositionSpawner(DeepFriedScreenshot);
 
   const [doorAlerts, setDoorAlerts] = useState<DoorAlerts>({});
   const [timers, setTimers] = useState<
@@ -184,11 +203,33 @@ const Home: NextPage = () => {
         });
         addBurstComposition({ durationInFrames: 30 * 10 + 14 });
       }
+      if (jsonEvent.event_name == "boom") {
+        addBoarBoomComposition({ durationInFrames: 50 });
+      }
+      if (jsonEvent.event_name == "banana") {
+        addBananaCompositions({
+          durationInFrames: 40,
+          setReneHP: (hp) => {
+            setReneHP(hp);
+            setDamageRene(true);
+          },
+        });
+      }
+      if (jsonEvent.event_name == "deepfriedscreenshot") {
+        addDeepFriedCompositions({
+          durationInFrames: 60 + 30,
+          text: (jsonEvent as any).text,
+          freeImage: () => {},
+        });
+      }
     });
   }, [
     addAlert,
     addAlienComposition,
+    addBananaCompositions,
+    addBoarBoomComposition,
     addBurstComposition,
+    addDeepFriedCompositions,
     addTchansComposition,
     addTimer,
     lastMessage,
@@ -268,6 +309,8 @@ const Home: NextPage = () => {
           </>
         )}
       </CamBorder>
+      {BoarBoomCompositions}
+      {DeepFriedCompositions}
       {Object.entries(doorAlerts).map(
         ([username, { position, profile_pic }]) => (
           <Player
@@ -309,9 +352,25 @@ const Home: NextPage = () => {
       {AlienCompositions}
       {BurstCompositions}
       {TchansCompositions}
+      {/*<Player
+        className="absolute"
+        component={Rene}
+        inputProps={{ hp: reneHP, takeDamage: damageRene }}
+        durationInFrames={120}
+        fps={VIDEO_FPS}
+        compositionHeight={1080}
+        compositionWidth={1920}
+        moveToBeginningWhenEnded={false}
+        autoPlay
+        loop
+      />*/}
+      {BananaCompositions}
     </div>
   );
 };
+
+//TODO página de "creditos" como se a live fosse um filme, puxando o título da twitch
+//TODO final boss rene que lança atrapalhancia e toma bala quando eu pego uma moeda
 
 const WrappedPage: NextPage = (props) => (
   <Suspense>

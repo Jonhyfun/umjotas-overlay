@@ -16,6 +16,7 @@
     "@remotion/player": "4.0.250",
     "@remotion/shapes": "4.0.250",
     "@remotion/tailwind": "4.0.250",
+    "@remotion/transitions": "4.0.250",
     "clsx": "2.1.1",
     "next": "15.1.2",
     "react": "19.0.0",

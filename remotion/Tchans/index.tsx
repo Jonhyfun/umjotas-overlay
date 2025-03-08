@@ -26,7 +26,7 @@ export const Tchans: SelfDestructComposition = ({ onFinished }) => {
   });
 
   return (
-    <Sequence durationInFrames={durationInFrames}>
+    <Sequence key="test" durationInFrames={durationInFrames}>
       <div
         style={{ boxShadow: `inset 0 0 ${blur}px ${spread}px black` }}
         className="w-full h-full fixed"
