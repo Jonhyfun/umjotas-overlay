@@ -72,6 +72,7 @@ function useBaseAnimationEffect<
 }
 
 export function useRegisterAnimationEffect<
+  //TODO maybe a hook to run a specific offseted interpolate (with a duration) by calling a function, and then i would build my own function that calls all these interpolates and register THAT as an imperative handle call?
   T extends Record<string, any>,
   J extends Record<string, VoidFunction>,
 >(
