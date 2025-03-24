@@ -28,7 +28,7 @@ function useBaseAnimationEffect<
   callback: (props: J) => T,
   deps: unknown[],
   loop = false,
-  registerEffect?: boolean,
+  checkDeps?: boolean,
 ) {
   const { durationInFrames } = useVideoConfig();
   const currentFrame = useCurrentFrame();
@@ -48,7 +48,7 @@ function useBaseAnimationEffect<
   }, [currentFrame, durationInFrames]);
 
   useEffect(() => {
-    if (INTERNAL_MOUNTED.current || !registerEffect) {
+    if (INTERNAL_MOUNTED.current || !checkDeps) {
       mounted.current = true;
       startingFrame.current = currentFrameRef.current;
       passedFrames.current = 0;
@@ -67,12 +67,20 @@ function useBaseAnimationEffect<
     startingFrame: startingFrame.current,
     currentFrame: currentFrameRef.current,
     passedFrames: passedFrames.current,
-    depsChanged: (registerEffect ? mounted.current : undefined) as any,
+    depsChanged: (checkDeps ? mounted.current : undefined) as any,
   } as J);
 }
 
+//TODO maybe a hook to run a specific offseted interpolate (with a duration) by calling a function, and then i would build my own function that calls all these interpolates and register THAT as an imperative handle call?
+export function useImperativeAnimation(loop?: boolean) { //? interpolate props
+  const animationFinished = useRef(false)
+  return useBaseAnimationEffect(() => {
+    //TODO return offseted interpolation here
+    //TODO (if currentFrame === duration) animationFinished.current = true
+  }, [], loop, true);
+}
+
 export function useRegisterAnimationEffect<
-  //TODO maybe a hook to run a specific offseted interpolate (with a duration) by calling a function, and then i would build my own function that calls all these interpolates and register THAT as an imperative handle call?
   T extends Record<string, any>,
   J extends Record<string, VoidFunction>,
 >(
