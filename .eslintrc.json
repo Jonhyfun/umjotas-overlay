@@ -4,7 +4,13 @@
   "overrides": [
     {
       "files": ["remotion/**/*.{ts,tsx}"],
-      "extends": ["plugin:@remotion/recommended"]
+      "extends": ["plugin:@remotion/recommended"],
+      "rules": {
+        "react/display-name": "off",
+        "react-hooks/exhaustive-deps": ["warn", {
+          "additionalHooks": "useAnimationTrigger"
+        }]
+      }
     }
   ]
 }

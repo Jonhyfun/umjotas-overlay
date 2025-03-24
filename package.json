@@ -24,6 +24,7 @@
     "react-use-websocket": "^4.11.1",
     "remotion": "4.0.250",
     "tailwind-merge": "2.5.2",
+    "use-sound": "^5.0.0",
     "zod": "3.22.3"
   },
   "devDependencies": {

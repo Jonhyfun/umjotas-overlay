@@ -1,68 +1,145 @@
 import {
+  Easing,
   Img,
   interpolate,
-  InterpolateOptions,
   staticFile,
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
 import { Jersey_10 } from "next/font/google";
-import { useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
+import { useRegisterAnimationEffect } from "../../app/hooks/animationEffect";
+import { defined, offsetInterpolate } from "../../app/utils/remotion";
 
 const pixelFont = Jersey_10({ weight: "400", subsets: ["latin"] });
 
-const offsetInterpolate = (
-  startsAt: number,
-  input: number,
-  inputRange: readonly number[],
-  outputRange: readonly number[],
-  options?: InterpolateOptions,
-) =>
-  interpolate(
-    input,
-    inputRange.map((frame) => frame + startsAt),
-    outputRange,
-    options,
-  );
+export type ReneCompositionRefType = {
+  takeDamage: VoidFunction;
+  die: VoidFunction;
+};
 
 export function Rene({
   hp = 100,
-  takeDamage = false,
+  ref,
+  destroyComponent,
 }: {
   hp: number;
-  takeDamage: boolean;
+  ref: RefObject<ReneCompositionRefType | null>;
+  destroyComponent: VoidFunction;
 }) {
-  const currentFrame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const currentHP = interpolate(hp, [0, 50], [0, 100]);
+  const initialHP = useRef(hp);
+  const currentFrame = useCurrentFrame();
+  const currentHP = interpolate(hp, [0, initialHP.current], [0, 100]);
   const [reneDirection, setReneDirection] = useState<"left" | "right">("left");
-  const [damageFrame, setDamageFrame] = useState(0);
+  const deathFrame = useRef(-1);
 
-  const currentFrameRef = useRef(0);
+  const { damageRotation, damageScale, damageOpacity } =
+    useRegisterAnimationEffect(
+      ref,
+      "takeDamage",
+      ({ startingFrame, currentFrame, passedFrames, depsChanged }) => {
+        if (!depsChanged || passedFrames > 5) {
+          return {};
+        }
 
-  const damageRotation =
-    damageFrame === 0
-      ? 12
-      : offsetInterpolate(damageFrame, currentFrame, [0, 3], [12, 35], {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-        });
+        const damageRotation = offsetInterpolate(
+          startingFrame,
+          currentFrame,
+          [0, 3],
+          [12, 35],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          },
+        );
 
-  const damageOpacity =
-    damageFrame === 0
-      ? 1
-      : offsetInterpolate(damageFrame, currentFrame, [0, 5], [0.6, 1], {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-        });
+        const damageScale = offsetInterpolate(
+          startingFrame,
+          currentFrame,
+          [0, 5],
+          [1, 1.1],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing: Easing.out(Easing.cubic),
+          },
+        );
 
-  const x = offsetInterpolate(
-    0,
-    currentFrame,
-    [0, 60, 61, 120],
-    [-100, 100, 100, -100],
-    { extrapolateLeft: "clamp" },
-  );
+        const damageOpacity = offsetInterpolate(
+          startingFrame,
+          currentFrame,
+          [0, 1, 5],
+          [1, 0.6, 1],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+          },
+        );
+
+        return { damageRotation, damageScale, damageOpacity };
+      },
+    );
+
+  const { deathOpacity, deathRotation, deathScale } =
+    useRegisterAnimationEffect(
+      ref,
+      "die",
+      ({ startingFrame, currentFrame, passedFrames, depsChanged }) => {
+        if (passedFrames === 30) {
+          deathFrame.current = currentFrame;
+        }
+        if (!depsChanged || passedFrames > 30) return {};
+        const deathRotation = offsetInterpolate(
+          startingFrame,
+          currentFrame,
+          [0, 30],
+          [-360, 0],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing: Easing.in(Easing.circle),
+          },
+        );
+
+        const deathScale = offsetInterpolate(
+          startingFrame,
+          currentFrame,
+          [0, 30],
+          [1, 0],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing: Easing.in(Easing.circle),
+          },
+        );
+
+        const deathOpacity = offsetInterpolate(
+          startingFrame,
+          currentFrame,
+          [0, 30],
+          [1, 0],
+          {
+            extrapolateLeft: "clamp",
+            extrapolateRight: "clamp",
+            easing: Easing.in(Easing.circle),
+          },
+        );
+
+        return { deathRotation, deathScale, deathOpacity };
+      },
+    );
+
+  const x =
+    hp === 0
+      ? 0
+      : offsetInterpolate(
+          0,
+          currentFrame,
+          [0, 60, 61, 120],
+          [-100, 100, 100, -100],
+          { extrapolateLeft: "clamp" },
+        );
 
   useEffect(() => {
     if (x === -100 || x === 100) {
@@ -71,20 +148,12 @@ export function Rene({
   }, [x]);
 
   useEffect(() => {
-    if (takeDamage) {
-      setDamageFrame(currentFrameRef.current);
+    if (deathFrame.current !== -1) {
+      if ((deathFrame.current + 1) % durationInFrames === currentFrame) {
+        destroyComponent();
+      }
     }
-  }, [takeDamage]);
-
-  useEffect(() => {
-    //if (currentFrame + 5 < durationInFrames) {
-    //  //TODO não ta rolando
-    //  currentFrameRef.current = Number(currentFrame.toString());
-    //}
-    //if (currentFrame === currentFrameRef.current + 5) {
-    //  currentFrameRef.current = 0;
-    //}
-  }, [currentFrame, durationInFrames]);
+  }, [currentFrame, destroyComponent, durationInFrames]);
 
   return (
     <div className="fixed right-64 bottom-10 flex flex-col items-center gap-6">
@@ -110,8 +179,8 @@ export function Rene({
       <Img
         className={"w-[525px] object-contain"}
         style={{
-          opacity: damageOpacity,
-          transform: `translateX(${x}px) scaleX(${reneDirection === "left" ? "-1" : "1"}) rotate(${damageRotation}deg)`,
+          opacity: defined(damageOpacity, deathOpacity, 1),
+          transform: `translateX(${x}px) scaleX(${reneDirection === "left" ? "-1" : "1"}) scale(${defined(damageScale, deathScale, 1)}) rotate3d(1, 1, 1, ${defined(deathRotation, 0)}deg) rotate(${defined(damageRotation, deathRotation, 0)}deg)`,
         }}
         src={staticFile("/rene.png")}
       ></Img>

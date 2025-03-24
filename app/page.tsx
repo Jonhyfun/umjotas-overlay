@@ -1,5 +1,6 @@
 "use client";
 
+import useSound from "use-sound";
 import useWebSocket from "react-use-websocket";
 import { Player } from "@remotion/player";
 import type { NextPage } from "next";
@@ -26,9 +27,8 @@ import { AnimeBurst } from "../remotion/AnimeBurst";
 import { BoarBoom } from "../remotion/BoarBoom";
 import { useCompositionSpawner } from "./hooks/compositionSpawner";
 import { Banana } from "../remotion/Banana";
-import { Rene } from "../remotion/Rene";
+import { Rene, type ReneCompositionRefType } from "../remotion/Rene";
 import { DeepFriedScreenshot } from "../remotion/DeepFriedScreenshot";
-import { prefetch } from "remotion";
 
 type DoorAlerts = {
   [key in string]: {
@@ -64,7 +64,7 @@ const GameBorder = ({
 }: PropsWithChildren<{ isAspectVideo?: boolean }>) => {
   return (
     <div
-      className={`absolute ${isAspectVideo ? "aspect-[16/9.1] left-1/2 -translate-x-1/2" : "aspect-[24.7/19] mr-2/3 ml-20 "} h-5/6 top-1/2 -translate-y-1/2 border-solid border-4 rounded-md border-black shadow-[0_0_60px_12px_#0AEBBFE0]`}
+      className={`absolute ${isAspectVideo ? "aspect-[16/9.1] left-1/2 -translate-x-1/2 h-[90%]" : "aspect-[24.7/19] mr-2/3 ml-20  h-5/6"} top-1/2 -translate-y-1/2 border-solid border-4 rounded-md border-black shadow-[0_0_60px_12px_#0AEBBFE0]`}
     >
       <div className="relative w-full h-full">
         {children}
@@ -83,7 +83,7 @@ const CamBorder = ({
 }: PropsWithChildren<{ isAspectVideo?: boolean; wings?: boolean }>) => {
   return (
     <div
-      className={`absolute aspect-[14/9] ${isAspectVideo ? "top-[118px] right-[196px] -z-10 h-1/4" : "top-5 right-8 h-2/6"} border-solid border-4 rounded-md border-black shadow-[0_0_60px_12px_#BF0AEBE0]`}
+      className={`absolute aspect-[14/9] ${isAspectVideo ? "top-[78px] right-[128px] -z-10 h-1/4" : "top-5 right-8 h-2/6"} border-solid border-4 rounded-md border-black shadow-[0_0_60px_12px_#BF0AEBE0]`}
     >
       <div className="relative w-full h-full">
         {children}
@@ -100,8 +100,14 @@ const Home: NextPage = () => {
   const wings = searchParams.get("wings");
   const isAspectVideo = searchParams.get("video");
 
-  const [reneHP, setReneHP] = useState(50);
-  const [damageRene, setDamageRene] = useState(false);
+  const reneCompositionAnimationsRef = useRef<ReneCompositionRefType>(null);
+
+  const [playReneDeathSound] = useSound("/smw_bowser_returns.wav", {
+    volume: 0.7,
+  });
+
+  const [reneDied, setReneDied] = useState(false);
+  const [reneHP, setReneHP] = useState(30);
 
   const [AlienCompositions, addAlienComposition] =
     useEphemeralComposition(Invasion);
@@ -210,8 +216,10 @@ const Home: NextPage = () => {
         addBananaCompositions({
           durationInFrames: 40,
           setReneHP: (hp) => {
-            setReneHP(hp);
-            setDamageRene(true);
+            if (hp !== 0) {
+              setReneHP(hp);
+              reneCompositionAnimationsRef.current?.takeDamage();
+            }
           },
         });
       }
@@ -235,6 +243,13 @@ const Home: NextPage = () => {
     lastMessage,
     sendMessage,
   ]);
+
+  useEffect(() => {
+    if (reneHP === 0) {
+      playReneDeathSound();
+      reneCompositionAnimationsRef.current?.die();
+    }
+  }, [playReneDeathSound, reneHP]);
 
   return (
     <div className="overflow-hidden shadow-[0_0_200px_rgba(0,0,0,0.15)] flex h-[1080px] w-[1920px] border-solid border-2 border-black relative">
@@ -352,19 +367,25 @@ const Home: NextPage = () => {
       {AlienCompositions}
       {BurstCompositions}
       {TchansCompositions}
-      {/*<Player
-        className="absolute"
-        component={Rene}
-        inputProps={{ hp: reneHP, takeDamage: damageRene }}
-        durationInFrames={120}
-        fps={VIDEO_FPS}
-        compositionHeight={1080}
-        compositionWidth={1920}
-        moveToBeginningWhenEnded={false}
-        autoPlay
-        loop
-      />*/}
-      {BananaCompositions}
+      {!reneDied && (
+        <Player
+          className="absolute"
+          component={Rene}
+          inputProps={{
+            hp: reneHP,
+            ref: reneCompositionAnimationsRef,
+            destroyComponent: () => setReneDied(true),
+          }}
+          durationInFrames={120}
+          fps={VIDEO_FPS}
+          compositionHeight={1080}
+          compositionWidth={1920}
+          moveToBeginningWhenEnded={false}
+          autoPlay
+          loop
+        />
+      )}
+      {reneHP !== 0 && BananaCompositions}
     </div>
   );
 };
